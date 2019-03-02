@@ -1,0 +1,83 @@
+version: "2.1"
+volumes:
+  resin-data: {}
+services:
+  trunk-recorder:
+    container_name: trunk-recorder
+    build:
+      dockerfile: armhf.dockerfile
+      context: ./host-images/trunk-recorder
+    privileged: true
+    depends_on:
+      - "config"
+    network_mode: host
+    volumes:
+      - "./data:/data"
+    environment:
+      - RECORDER_CONF=sites/US/CA/SanMateo/config.json
+      - TR_DISABLED=1
+    restart: on-failure
+  ngrok:
+    links:
+      - nginx:https
+    container_name: ngrok
+    build:
+      dockerfile: armhf.dockerfile
+      context: ./host-images/ngrok
+    privileged: false
+    depends_on:
+      - nginx
+    command: ngrok tls '-authtoken=iiX4RYrrdFWgU9pdDEnR_4qRcocGF5v9E3SjGmys7L' '-hostname=edge.sibyl.vision' '-region=us' nginx:443
+  config:
+    container_name: config
+    build:
+      dockerfile: armhf.dockerfile
+      context: ./host-images/config
+    network_mode: host
+    restart: "on-failure"
+    volumes:
+      - "./data:/data"
+  manager:
+    container_name: manager
+    build:
+      dockerfile: armhf.dockerfile
+      context: ./host-images/manager
+    volumes:
+      - "./data:/data"
+    ports:
+      - 3000
+    environment:
+      - APP_ID=backend
+      - PORT=3000
+      - LOG_LEVEL=debug
+      - REQUEST_LIMIT=100kb
+      - SESSION_SECRET=mySecret
+      - SWAGGER_API_SPEC=/spec
+      - NODE_ENV=production
+    restart: always
+  nginx:
+    container_name: nginx
+    depends_on:
+      - manager
+    build:
+      dockerfile: armhf.dockerfile
+      context: host-images/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always
+    volumes:
+      - "./data:/data"
+  datadog:
+    build:
+      dockerfile: armhf.dockerfile
+      context: ./host-images/datadog
+    privileged: true
+    restart: always
+    pid: "host"
+    network_mode: "host"
+    environment:
+      - DATADOG_API_KEY=d08da1e51918163e2333a86cb54d4b02
+    labels:
+      io.resin.features.dbus: '1'
+      io.resin.features.balena-socket: '1'
