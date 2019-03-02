@@ -1,0 +1,11 @@
+AUTHORS
+ChangeLog
+setup.cfg
+setup.py
+skyscraper_watchdog.egg-info/PKG-INFO
+skyscraper_watchdog.egg-info/SOURCES.txt
+skyscraper_watchdog.egg-info/dependency_links.txt
+skyscraper_watchdog.egg-info/not-zip-safe
+skyscraper_watchdog.egg-info/pbr.json
+skyscraper_watchdog.egg-info/requires.txt
+skyscraper_watchdog.egg-info/top_level.txt
